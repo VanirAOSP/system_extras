@@ -215,8 +215,12 @@ void ext4_free_fs_aux_info()
 /* Fill in the superblock memory buffer based on the filesystem parameters */
 void ext4_fill_in_sb()
 {
-	unsigned int i;
+	unsigned int i, fs_blocks_per_erase_block = 0;
 	struct ext4_super_block *sb = aux_info.sb;
+
+#ifdef BOARD_NAND_ERASE_BLOCK_SIZE
+	fs_blocks_per_erase_block = BOARD_NAND_ERASE_BLOCK_SIZE / info.block_size;
+#endif
 
 	sb->s_inodes_count = info.inodes_per_group * aux_info.groups;
 	sb->s_blocks_count_lo = aux_info.len_blocks;
@@ -282,11 +286,15 @@ void ext4_fill_in_sb()
 	sb->s_want_extra_isize = sizeof(struct ext4_inode) -
 		EXT4_GOOD_OLD_INODE_SIZE;
 	sb->s_flags = 0;
-	sb->s_raid_stride = 0;
+	sb->s_raid_stride = fs_blocks_per_erase_block;
 	sb->s_mmp_interval = 0;
 	sb->s_mmp_block = 0;
-	sb->s_raid_stripe_width = 0;
+	sb->s_raid_stripe_width = fs_blocks_per_erase_block;
+#ifdef BOARD_NAND_ERASE_BLOCK_SIZE
+	sb->s_log_groups_per_flex = 5;	/*  -G 32 (2 ** 5) per Whitepaper */
+#else
 	sb->s_log_groups_per_flex = 0;
+#endif
 	sb->s_kbytes_written = 0;
 
 	for (i = 0; i < aux_info.groups; i++) {

@@ -20,10 +20,15 @@ libext4_utils_src_files := \
 
 # -- All host/targets including windows
 
+ifneq ($(BOARD_NAND_ERASE_BLOCK_SIZE),)
+DEFINE_BOARD_NAND_ERASE_BLOCK_SIZE = -DBOARD_NAND_ERASE_BLOCK_SIZE=$(BOARD_NAND_ERASE_BLOCK_SIZE)
+endif
+
 LOCAL_SRC_FILES := $(libext4_utils_src_files)
 LOCAL_MODULE := libext4_utils
 LOCAL_MODULE_TAGS := optional
 LOCAL_C_INCLUDES += external/zlib
+LOCAL_CFLAGS += $(DEFINE_BOARD_NAND_ERASE_BLOCK_SIZE)
 
 ifeq ($(HAVE_SELINUX), true)
 LOCAL_C_INCLUDES += external/libselinux/include
@@ -59,6 +64,7 @@ LOCAL_MODULE := libext4_utils
 LOCAL_MODULE_TAGS := optional
 LOCAL_C_INCLUDES += external/zlib
 LOCAL_SHARED_LIBRARIES := libz
+LOCAL_CFLAGS += $(DEFINE_BOARD_NAND_ERASE_BLOCK_SIZE)
 
 ifeq ($(HAVE_SELINUX), true)
 LOCAL_C_INCLUDES += external/libselinux/include
@@ -74,6 +80,7 @@ LOCAL_SRC_FILES := $(libext4_utils_src_files)
 LOCAL_MODULE := libext4_utils
 LOCAL_MODULE_TAGS := optional
 LOCAL_C_INCLUDES += external/zlib
+LOCAL_CFLAGS += $(DEFINE_BOARD_NAND_ERASE_BLOCK_SIZE)
 
 ifeq ($(HAVE_SELINUX), true)
 LOCAL_C_INCLUDES += external/libselinux/include

@@ -356,7 +356,11 @@ int make_ext4fs_internal(int fd, const char *directory,
 		info.inodes = compute_inodes();
 
 	if (info.inode_size <= 0)
+#ifdef BOARD_NAND_ERASE_BLOCK_SIZE
+		info.inode_size = 128; /* -I 128 per Whitepaper */
+#else
 		info.inode_size = 256;
+#endif
 
 	if (info.label == NULL)
 		info.label = "";
@@ -373,6 +377,11 @@ int make_ext4fs_internal(int fd, const char *directory,
 	info.feat_incompat |=
 			EXT4_FEATURE_INCOMPAT_EXTENTS |
 			EXT4_FEATURE_INCOMPAT_FILETYPE;
+#ifdef BOARD_NAND_ERASE_BLOCK_SIZE
+	info.feat_incompat |=
+			/* Enable Flex Block Group support */
+			EXT4_FEATURE_INCOMPAT_FLEX_BG;
+#endif
 
 
 	info.bg_desc_reserve_blocks = compute_bg_desc_reserve_blocks();
@@ -395,6 +404,13 @@ int make_ext4fs_internal(int fd, const char *directory,
 	block_allocator_init();
 
 	ext4_fill_in_sb();
+
+	if (aux_info.sb->s_log_groups_per_flex)
+		printf("    Flex BG count: %d\n", 1 << aux_info.sb->s_log_groups_per_flex);
+	if (aux_info.sb->s_raid_stride)
+		printf("    Stride size and Stripe width: %u (%uK)\n",
+			aux_info.sb->s_raid_stride,
+			(aux_info.sb->s_raid_stride * info.block_size) >> 10);
 
 	if (reserve_inodes(0, 10) == EXT4_ALLOCATE_FAILED)
 		error("failed to reserve first 10 inodes");
