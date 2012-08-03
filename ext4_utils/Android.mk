@@ -215,4 +215,12 @@ LOCAL_IS_HOST_MODULE := true
 
 include $(BUILD_PREBUILT)
 
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := fstrim.c
+LOCAL_MODULE := fstrim
+LOCAL_MODULE_TAGS := optional
+
+include $(BUILD_EXECUTABLE)
+
 endif
