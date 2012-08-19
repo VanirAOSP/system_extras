@@ -15,7 +15,7 @@ LOCAL_MODULE:= memtest
 LOCAL_MODULE_TAGS := optional
 
 ## LOCAL_CFLAGS += -fstack-protector-all
-LOCAL_CFLAGS += -fomit-frame-pointer
+LOCAL_CFLAGS += -fomit-frame-pointer -fno-strict-aliasing
 
 include $(BUILD_EXECUTABLE)
 endif
