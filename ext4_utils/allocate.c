@@ -16,24 +16,11 @@
 
 #include "ext4_utils.h"
 #include "allocate.h"
-#include "ext4.h"
 
 #include <sparse/sparse.h>
 
 #include <stdio.h>
 #include <stdlib.h>
-
-struct region_list {
-	struct region *first;
-	struct region *last;
-	struct region *iter;
-	u32 partial_iter;
-};
-
-struct block_allocation {
-	struct region_list list;
-	struct region_list oob_list;
-};
 
 struct region {
 	u32 block;
@@ -77,6 +64,8 @@ struct block_allocation *create_allocation()
 	alloc->list.partial_iter = 0;
 	alloc->oob_list.iter = NULL;
 	alloc->oob_list.partial_iter = 0;
+	alloc->filename = NULL;
+	alloc->next = NULL;
 	return alloc;
 }
 
@@ -138,9 +127,7 @@ static void dump_starting_from(struct region *reg)
 {
 	for (; reg; reg = reg->next) {
 		printf("%p: Blocks %d-%d (%d)\n", reg,
-				reg->bg * info.blocks_per_group + reg->block,
-				reg->bg * info.blocks_per_group + reg->block + reg->len - 1,
-				reg->len);
+			   reg->block, reg->block + reg->len - 1, reg->len)
 	}
 }
 
@@ -153,6 +140,19 @@ static void dump_region_lists(struct block_allocation *alloc) {
 	dump_starting_from(alloc->oob_list.first);
 }
 #endif
+
+void print_blocks(FILE* f, struct block_allocation *alloc)
+{
+	struct region *reg;
+	for (reg = alloc->list.first; reg; reg = reg->next) {
+		if (reg->len == 1) {
+			fprintf(f, " %d", reg->block);
+		} else {
+			fprintf(f, " %d-%d", reg->block, reg->block + reg->len - 1);
+		}
+	}
+	fputc('\n', f);
+}
 
 void append_region(struct block_allocation *alloc,
 		u32 block, u32 len, int bg_num)
@@ -181,7 +181,7 @@ static void allocate_bg_inode_table(struct block_group_info *bg)
 	if (bg->inode_table == NULL)
 		critical_error_errno("calloc");
 
-	sparse_file_add_data(info.sparse_file, bg->inode_table,
+	sparse_file_add_data(ext4_sparse_file, bg->inode_table,
 			aux_info.inode_table_blocks	* info.block_size, block);
 
 	bg->flags &= ~EXT4_BG_INODE_UNINIT;
@@ -299,7 +299,7 @@ static void init_bg(struct block_group_info *bg, unsigned int i)
 	u32 block = bg->first_block;
 	if (bg->has_superblock)
 		block += 1 + aux_info.bg_desc_blocks +  info.bg_desc_reserve_blocks;
-	sparse_file_add_data(info.sparse_file, bg->bitmaps, 2 * info.block_size,
+	sparse_file_add_data(ext4_sparse_file, bg->bitmaps, 2 * info.block_size,
 			block);
 
 	bg->data_blocks_used = 0;
@@ -685,7 +685,7 @@ struct ext4_xattr_header *get_xattr_block_for_inode(struct ext4_inode *inode)
 	inode->i_blocks_lo = cpu_to_le32(le32_to_cpu(inode->i_blocks_lo) + (info.block_size / 512));
 	inode->i_file_acl_lo = cpu_to_le32(block_num);
 
-	int result = sparse_file_add_data(info.sparse_file, block, info.block_size, block_num);
+	int result = sparse_file_add_data(ext4_sparse_file, block, info.block_size, block_num);
 	if (result != 0) {
 		error("get_xattr: sparse_file_add_data failure %d", result);
 		free(block);

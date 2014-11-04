@@ -17,6 +17,8 @@
 #include "ext4_utils.h"
 #include "wipe.h"
 
+#if WIPE_IS_SUPPORTED
+
 #if defined(__linux__)
 
 #include <linux/fs.h>
@@ -36,7 +38,11 @@ int wipe_block_device(int fd, s64 len)
 	u64 range[2];
 	int ret;
 
-#ifndef NO_SECURE_DISCARD
+	if (!is_block_device_fd(fd)) {
+		// Wiping only makes sense on a block device.
+		return 0;
+	}
+
 	range[0] = 0;
 	range[1] = len;
 	ret = ioctl(fd, BLKSECDISCARD, &range);
@@ -57,9 +63,16 @@ int wipe_block_device(int fd, s64 len)
 #endif
 	return 0;
 }
-#else
+
+#else  /* __linux__ */
+#error "Missing block device wiping implementation for this platform!"
+#endif
+
+#else  /* WIPE_IS_SUPPORTED */
+
 int wipe_block_device(int fd, s64 len)
 {
+<<<<<<< HEAD
 	warn("Wipe via secure discard suppressed due to bug in EMMC firmware\n");
 	return 1;
 }
@@ -68,7 +81,10 @@ int wipe_block_device(int fd, s64 len)
 int wipe_block_device(int fd, s64 len)
 {
 	error("wipe not supported on non-linux platforms");
+=======
+	/* Wiping is not supported on this platform. */
+>>>>>>> android-5.0.0_r2
 	return 1;
 }
-#endif
 
+#endif  /* WIPE_IS_SUPPORTED */
