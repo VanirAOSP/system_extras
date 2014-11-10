@@ -72,18 +72,7 @@ int wipe_block_device(int fd, s64 len)
 
 int wipe_block_device(int fd, s64 len)
 {
-<<<<<<< HEAD
-	warn("Wipe via secure discard suppressed due to bug in EMMC firmware\n");
-	return 1;
-}
-#endif
-#else
-int wipe_block_device(int fd, s64 len)
-{
-	error("wipe not supported on non-linux platforms");
-=======
 	/* Wiping is not supported on this platform. */
->>>>>>> android-5.0.0_r2
 	return 1;
 }
 
