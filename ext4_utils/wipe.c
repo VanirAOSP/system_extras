@@ -32,7 +32,6 @@
 #define BLKSECDISCARD _IO(0x12,125)
 #endif
 
-#ifndef SUPPRESS_EMMC_WIPE
 int wipe_block_device(int fd, s64 len)
 {
 	u64 range[2];
@@ -42,7 +41,7 @@ int wipe_block_device(int fd, s64 len)
 		// Wiping only makes sense on a block device.
 		return 0;
 	}
-
+#ifndef NO_SECURE_DISCARD
 	range[0] = 0;
 	range[1] = len;
 	ret = ioctl(fd, BLKSECDISCARD, &range);
@@ -59,7 +58,7 @@ int wipe_block_device(int fd, s64 len)
 			return 0;
 		}
 #ifndef NO_SECURE_DISCARD
-	}
+    }
 #endif
 	return 0;
 }
