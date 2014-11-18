@@ -58,9 +58,7 @@ int wipe_block_device(int fd, s64 len)
 			warn("Wipe via secure discard failed, used discard instead\n");
 			return 0;
 		}
-#ifndef NO_SECURE_DISCARD
 	}
-#endif
 	return 0;
 }
 
