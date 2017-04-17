@@ -18,7 +18,7 @@ LOCAL_MODULE := generate_verity_key
 LOCAL_SRC_FILES := generate_verity_key.c
 LOCAL_MODULE_CLASS := EXECUTABLES
 LOCAL_MODULE_TAGS := optional
-LOCAL_SHARED_LIBRARIES := libcrypto-host
+LOCAL_SHARED_LIBRARIES := libcrypto_utils libcrypto-host
 include $(BUILD_HOST_EXECUTABLE)
 
 include $(CLEAR_VARS)
@@ -58,6 +58,7 @@ LOCAL_STATIC_LIBRARIES := \
     libfec_rs_host \
     libmincrypt \
     libcrypto_static \
+    libcrypto_utils_static \
     libext4_utils_host \
     libsparse_host \
     libsquashfs_utils_host \
